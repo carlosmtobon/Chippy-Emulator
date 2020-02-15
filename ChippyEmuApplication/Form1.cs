@@ -20,11 +20,14 @@ namespace ChippyEmuApplication
         Display _display;
         CPU _cpu;
         KeyPad _kb;
-      
+
+        Thread gameThread;
 
         public Form1()
         {
             InitializeComponent();
+            //gameThread = new Thread(() => Init((@"C:\Users\Carlos\Desktop\Chip8Games\INVADERS")));
+            //gameThread.Start();
         }
 
         public void Init(String fileName)
@@ -55,12 +58,12 @@ namespace ChippyEmuApplication
                 {
                     frames++;
                     _cpu.UpdateTimers();
-                    if (_display.drawScreen)
-                    {
-                        UpdateScreen(_display);
-                        _display.drawScreen = false;
-                    }
                     instruction = 0;
+                }
+                if (_display.drawScreen)
+                {
+                    UpdateScreen(_display);
+                    _display.drawScreen = false;
                 }
                 
                 var timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
@@ -82,7 +85,7 @@ namespace ChippyEmuApplication
         {
             try
             {
-                var size = 5;
+                var size = 10;
                 Bitmap image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
                 using (Graphics g = Graphics.FromImage(image))
                 {
@@ -91,13 +94,13 @@ namespace ChippyEmuApplication
 
                     byte[][] pixels = _display._displayPixels;
 
-                    for (int y = 0; y < pixels[0].Length; y++)
+                    for (int y = 0; y < _display.Height; y++)
                     {
-                        for (int x = 0; x < pixels.Length; x++)
+                        for (int x = 0; x < _display.Width; x++)
                         {
-                            if (pixels[x][y] == 1)
+                            if (pixels[y][x] == 1)
                             {
-                                g.FillRectangle(brsh, (pictureBox1.Width/64) * x, (pictureBox1.Height / 32) * y , size, size);
+                                g.FillRectangle(brsh, (pictureBox1.Width / 64) * x, (pictureBox1.Height / 32) * y, size, size);
                             }
                         }
                     }
@@ -186,13 +189,18 @@ namespace ChippyEmuApplication
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-            Thread t = new Thread(()=> Init(((OpenFileDialog)sender).FileName));
-            t.Start();
+            gameThread = new Thread(()=> Init(((OpenFileDialog)sender).FileName));
+            gameThread.Start();
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
             openFileDialog1.ShowDialog();
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            gameThread.Abort();
         }
     }
 }

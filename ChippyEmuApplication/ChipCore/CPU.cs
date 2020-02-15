@@ -41,8 +41,9 @@ namespace ChipCore
 
         public void ExecuteCycle()
         {
-            _byteBuff[1] = _ram.LoadFromMemory(_programCounter);
-            _byteBuff[0] = _ram.LoadFromMemory((ushort)(_programCounter + 1));
+            //_opcode = (ushort)(_ram.LoadFromMemory(_programCounter++) << 8 | _ram.LoadFromMemory(_programCounter++));
+            _byteBuff[1] = _ram.LoadFromMemory(_programCounter++);
+            _byteBuff[0] = _ram.LoadFromMemory((ushort)(_programCounter++));
 
             _opcode = (BitConverter.ToUInt16(_byteBuff, 0));
             ProcessOpcode(); 
@@ -164,7 +165,7 @@ namespace ChipCore
                     RND_Vx_byte(x, kk);
                     break;
                 case 0xD:
-                    DRW_Vx_Vy_nibble(x, y, leastSigNib);
+                    DRW_Vx_Vy_nibble(x , y, leastSigNib);
                     break;
                 case 0xE:
                     if (leastSigByte == 0x009E)
@@ -206,13 +207,11 @@ namespace ChipCore
         private void CLS()
         {
             _display.ClearScreen();
-            _programCounter += 2;
         }
 
         private void RET()
         {
-            _stackPointer--;
-            _programCounter = _stack[_stackPointer];
+            _programCounter = _stack[--_stackPointer];
         }
 
         private void JP_addr(ushort addr)
@@ -222,81 +221,66 @@ namespace ChipCore
 
         private void CALL_addr(ushort addr)
         {
-            _stack[_stackPointer] = _programCounter;
-            _stackPointer++;
+            _stack[_stackPointer++] = _programCounter;
             _programCounter = addr;
         }
 
         private void SE_Vx_byte(byte x, byte kk)
         {
             if (_vRegisters[x] == kk)
-                _programCounter += 4;
-            else
                 _programCounter += 2;
         }
 
         private void SNE_Vx_byte(byte x, byte kk)
         {
             if (_vRegisters[x] != kk)
-                _programCounter += 4;
-            else
                 _programCounter += 2;
         }
 
         private void SE_Vx_Vy(byte x, ushort y)
         {
             if (_vRegisters[x] == _vRegisters[y])
-                _programCounter += 4;
-            else
                 _programCounter += 2;
         }
 
         private void LD_Vx_byte(byte x, byte kk)
         {
             _vRegisters[x] = kk;
-            _programCounter += 2;
         }
 
         private void ADD_Vx_byte(byte x, byte kk)
         {
-            _vRegisters[x] = (byte)(_vRegisters[x] + kk);
-            _programCounter += 2;
+            _vRegisters[x] += kk;
         }
 
         private void LD_Vx_Vy(byte x, byte y)
         {
             _vRegisters[x] = _vRegisters[y];
-            _programCounter += 2;
         }
 
         private void OR_Vx_Vy(byte x, byte y)
         {
             _vRegisters[x] = (byte)(_vRegisters[x] | _vRegisters[y]);
-            _programCounter += 2;
         }
 
         private void AND_Vx_Vy(byte x, byte y)
         {
             _vRegisters[x] = (byte)(_vRegisters[x] & _vRegisters[y]);
-            _programCounter += 2;
         }
 
         private void XOR_Vx_Vy(byte x, byte y)
         {
             _vRegisters[x] = (byte)(_vRegisters[x] ^ _vRegisters[y]);
-            _programCounter += 2;
         }
 
         private void ADD_Vx_Vy(byte x, byte y)
         {
-            int sum = _vRegisters[x] + _vRegisters[y];
-            if (sum > 255)
+            if ((_vRegisters[x] + _vRegisters[y]) > 255)
                 _vRegisters[vfIndex] = 1;
             else
                 _vRegisters[vfIndex] = 0;
 
-            _vRegisters[x] = (byte)(sum | 0x8);
-            _programCounter += 2;
+            _vRegisters[x] += _vRegisters[y];
         }
 
         private void SUB_Vx_Vy(byte x, byte y)
@@ -305,8 +289,7 @@ namespace ChipCore
                 _vRegisters[vfIndex] = 1;
             else
                 _vRegisters[vfIndex] = 0;
-            _vRegisters[x] = (byte)(_vRegisters[x] - _vRegisters[y]);
-            _programCounter += 2;
+            _vRegisters[x] -= _vRegisters[y];
         }
 
         // If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
@@ -314,7 +297,6 @@ namespace ChipCore
         {
             _vRegisters[vfIndex] = (byte)(_vRegisters[x] & 1);
             _vRegisters[x] = (byte)(_vRegisters[y] >> 1);
-            _programCounter += 2;
         }
 
         //Set Vx = Vy - Vx, set VF = NOT borrow.
@@ -326,7 +308,6 @@ namespace ChipCore
             else
                 _vRegisters[vfIndex] = 0;
             _vRegisters[x] = (byte)(_vRegisters[y] - _vRegisters[x]);
-            _programCounter += 2;
         }
 
         //Set Vx = Vx SHL 1.
@@ -336,7 +317,6 @@ namespace ChipCore
         {
             _vRegisters[vfIndex] = (byte)((_vRegisters[x] & 0x8) >> 3);
             _vRegisters[x] =  (byte)(_vRegisters[y] << 1);
-            _programCounter += 2;
         }
 
         //Skip next instruction if Vx != Vy.
@@ -345,8 +325,6 @@ namespace ChipCore
         private void SNE_Vx_Vy(byte x, byte y)
         {
             if (_vRegisters[x] != _vRegisters[y])
-                _programCounter += 4;
-            else
                 _programCounter += 2;
         }
 
@@ -358,7 +336,6 @@ namespace ChipCore
         private void LD_I_addr(ushort addr)
         {
             _iRegister = addr;
-            _programCounter += 2;
         }
 
         /*
@@ -383,7 +360,6 @@ namespace ChipCore
         {
             Random random = new Random();
             _vRegisters[x] = (byte)(random.Next(0, 255) & kk);
-            _programCounter += 2;
         }
 
         /*
@@ -401,12 +377,13 @@ namespace ChipCore
         {
             byte[] spriteData = _ram.LoadMemBlock(_iRegister, n);
             Sprite sprite = new Sprite(spriteData);
-            bool collision =_display.RenderSprite(x, y, sprite);
+            var xStart = _vRegisters[x];
+            var yStart = _vRegisters[y];
+            bool collision =_display.RenderSprite(xStart, yStart, sprite);
             if (collision)
                 _vRegisters[vfIndex] = 1;
             else
                 _vRegisters[vfIndex] = 0;
-            _programCounter += 2;
             _display.drawScreen = true;
         }
 
@@ -414,11 +391,6 @@ namespace ChipCore
         {
             bool keyPressed = _keypad.GetKeyBoardBuffer(_vRegisters[x]);
             if (keyPressed)
-            {
-                Console.WriteLine("Key Pressed!");
-                _programCounter += 4;
-            }  
-            else
                 _programCounter += 2;
         }
 
@@ -427,18 +399,12 @@ namespace ChipCore
            
             bool keyPressed = _keypad.GetKeyBoardBuffer(_vRegisters[x]);
             if (!keyPressed)
-            {
-                Console.WriteLine("Key is Released");
-                _programCounter += 4;
-            }
-            else
                 _programCounter += 2;
         }
 
         private void LD_Vx_DT(byte x)
         {
             _vRegisters[x] = _delayTimerRegister;
-            _programCounter += 2;
         }
 
         /*
@@ -449,32 +415,27 @@ namespace ChipCore
         private void LD_Vx_K(byte x)
         {
             _vRegisters[x] = _keypad.WaitForKey();
-            _programCounter += 2;
         }
 
         private void LD_DT_Vx(byte x)
         {
             _delayTimerRegister = _vRegisters[x];
-            _programCounter += 2;
         }
 
         private void LD_ST_Vx(byte x)
         {
             _soundTimerRegister = _vRegisters[x];
-            _programCounter += 2;
         }
 
         private void ADD_I_Vx(byte x)
         {
             _iRegister += x;
-            _programCounter += 2;
         }
 
         private void LD_F_Vx(byte x)
         {
            
             _iRegister = (ushort)(_vRegisters[x] * 5);
-            _programCounter += 2;
         }
 
         private void LD_B_Vx(byte x)
@@ -487,23 +448,20 @@ namespace ChipCore
             _ram.StoreInMemory(_iRegister, hundred);
             _ram.StoreInMemory((ushort)(_iRegister+1), ten);
             _ram.StoreInMemory((ushort)(_iRegister+2), one);
-            _programCounter += 2;
         }
 
         private void LD_I_Vx(byte x)
         {
             ushort currentAddr = _iRegister;
-            for (int i = 0; i < x; i++)
+            for (int i = 0; i <= x; i++)
                 _ram.StoreInMemory(currentAddr++, _vRegisters[i]);
-            _programCounter += 2;
         }
 
         private void LD_Vx_I(byte x)
         {
             ushort currentAddr = _iRegister;
-            for (int i = 0; i < x; i++)
+            for (int i = 0; i <= x; i++)
                 _vRegisters[i] = _ram.LoadFromMemory(currentAddr++);
-            _programCounter += 2;
         }
     }
 }

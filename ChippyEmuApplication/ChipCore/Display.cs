@@ -9,7 +9,9 @@ namespace ChipCore
         public byte[][] _displayPixels;
      
         RAM _ram;
-        internal bool drawScreen ;
+        public int Height = 32;
+        public int Width = 64;
+        internal bool drawScreen;
 
         public Display(RAM ram)
         {
@@ -32,14 +34,13 @@ namespace ChipCore
             var spriteData = sprite.GetSpriteData();
             for (int i = 0; i < spriteData.Length; i++)
             {
-                byte[] row = _displayPixels[x];
                 byte b = spriteData[i];
                 for (int j = 0; j < 8; j++)
                 {
-                    var bitInBuff = _displayPixels[((x + j) % 64)][(y + i) % 32];
+                    var bitInBuff = _displayPixels[(y + i) % 64][(x + j) % 32]; 
                     byte bit = (byte)((b >> (7 - j)) & 1);
-                    _displayPixels[((x + j) % 64)][(y + i) % 32] ^= bit;
-                    var bitInBuffAfter = _displayPixels[((x + j) % 64)][(y + i) % 32];
+                    _displayPixels[(y + i) % 64][(x + j) % 32] ^= bit;
+                    var bitInBuffAfter = _displayPixels[(y + i) % 64][(x + j) % 32];
                     if ((bitInBuff == 1) && bitInBuff != bitInBuffAfter) 
                         collision = true; 
                 }
