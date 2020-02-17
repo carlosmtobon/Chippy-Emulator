@@ -1,14 +1,9 @@
 ﻿using ChipCore;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ChippyEmuApplication
@@ -26,8 +21,6 @@ namespace ChippyEmuApplication
         public Form1()
         {
             InitializeComponent();
-            //gameThread = new Thread(() => Init((@"C:\Users\Carlos\Desktop\Chip8Games\INVADERS")));
-            //gameThread.Start();
         }
 
         public void Init(String fileName)
@@ -48,12 +41,12 @@ namespace ChippyEmuApplication
             int frames = 0;
             stopwatch.Start();
             total.Start();
-            while (_cpu.GetProgramCounter() < _ram.GetMemSize())
+            while (true)
             {
                 stopwatch.Restart();
                 _cpu.ExecuteCycle();
                 instruction++;
-               
+
                 if (instruction == 9)
                 {
                     frames++;
@@ -65,16 +58,21 @@ namespace ChippyEmuApplication
                     UpdateScreen(_display);
                     _display.drawScreen = false;
                 }
-                
-                var timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
-                while (timeElapsed < 1852)
-                {
-                    timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
-                }
+
+
+                Thread.Sleep(1);
+                //var timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
+                //while (timeElapsed < 1852)
+                //{
+                //    timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
+                //}
 
                 if (total.ElapsedMilliseconds > 1000)
                 {
-                    Console.WriteLine(frames);
+                    Invoke((MethodInvoker)delegate
+                    {
+                        fpsLabel.Text = $"FPS: {frames}";
+                    });
                     frames = 0;
                     total.Restart();
                 }
@@ -85,12 +83,12 @@ namespace ChippyEmuApplication
         {
             try
             {
-                var size = 10;
+                var size = 8;
                 Bitmap image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
                 using (Graphics g = Graphics.FromImage(image))
                 {
 
-                    Brush brsh = new SolidBrush(Color.Red);
+                    Brush brsh = new SolidBrush(Color.ForestGreen);
 
                     byte[][] pixels = _display._displayPixels;
 
@@ -105,15 +103,15 @@ namespace ChippyEmuApplication
                         }
                     }
                     pictureBox1.Image = image;
-                    _display.ConsoleDisplay();
+                    //_display.ConsoleDisplay();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }
         }
-          
+
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
@@ -189,12 +187,16 @@ namespace ChippyEmuApplication
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-            gameThread = new Thread(()=> Init(((OpenFileDialog)sender).FileName));
+            gameThread = new Thread(() => Init(((OpenFileDialog)sender).FileName));
             gameThread.Start();
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
+            if (gameThread != null && gameThread.IsAlive)
+            {
+                gameThread.Abort();
+            }
             openFileDialog1.ShowDialog();
         }
 

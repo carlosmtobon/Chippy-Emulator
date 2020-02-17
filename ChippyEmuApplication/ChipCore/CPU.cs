@@ -1,27 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using System.Threading;
 
 namespace ChipCore
 {
     class CPU
     {
-        byte[] _byteBuff = new byte[2];
+        readonly byte[] _byteBuff = new byte[2];
         ushort _opcode = 0x0;
         ushort _programCounter = 0x200;
         int _stackPointer = 0;
-        ushort[] _stack = new ushort[16];
-
-        byte v0Index = 0x0;
-        byte vfIndex = 0xF;
-
-        RAM _ram;
-        Display _display;
-        KeyPad _keypad;
+        readonly ushort[] _stack = new ushort[16];
+        readonly byte v0Index = 0x0;
+        readonly byte vfIndex = 0xF;
+        readonly RAM _ram;
+        readonly Display _display;
+        readonly KeyPad _keypad;
 
         // Registers
-        byte[] _vRegisters = new byte[16]; 
+        readonly byte[] _vRegisters = new byte[16];
 
         // Register to store mem address (12 right most bits)
         ushort _iRegister;
@@ -41,12 +38,12 @@ namespace ChipCore
 
         public void ExecuteCycle()
         {
-            //_opcode = (ushort)(_ram.LoadFromMemory(_programCounter++) << 8 | _ram.LoadFromMemory(_programCounter++));
-            _byteBuff[1] = _ram.LoadFromMemory(_programCounter++);
-            _byteBuff[0] = _ram.LoadFromMemory((ushort)(_programCounter++));
+            _opcode = (ushort)(_ram.LoadFromMemory(_programCounter++) << 8 | _ram.LoadFromMemory(_programCounter++));
+            // _byteBuff[1] = _ram.LoadFromMemory(_programCounter++);
+            //  _byteBuff[0] = _ram.LoadFromMemory(_programCounter++);
 
-            _opcode = (BitConverter.ToUInt16(_byteBuff, 0));
-            ProcessOpcode(); 
+            // _opcode = (BitConverter.ToUInt16(_byteBuff, 0));
+            ProcessOpcode();
         }
 
         internal ushort GetProgramCounter()
@@ -82,7 +79,11 @@ namespace ChipCore
         internal void UpdateTimers()
         {
             if (_soundTimerRegister > 0)
+            {
+                if (_soundTimerRegister == 1)
+                    new Thread(() => Console.Beep(3000, 100)).Start();
                 _soundTimerRegister--;
+            }
 
             if (_delayTimerRegister > 0)
                 _delayTimerRegister--;
@@ -94,7 +95,7 @@ namespace ChipCore
             byte leastSigNib = (byte)(_opcode & 0x000F);
             byte leastSigByte = (byte)(_opcode & 0x00FF);
 
-            ushort addr = (ushort)(_opcode & 0x0FFF); 
+            ushort addr = (ushort)(_opcode & 0x0FFF);
             byte kk = (byte)(_opcode & 0x00FF);
             byte x = (byte)((_opcode & 0x0F00) >> 8);
             byte y = (byte)((_opcode & 0x00F0) >> 4);
@@ -122,7 +123,7 @@ namespace ChipCore
                     SNE_Vx_byte(x, kk);
                     break;
                 case 5:
-                    if (leastSigNib == 5)
+                    if (leastSigNib == 0)
                         SE_Vx_Vy(x, y);
                     break;
                 case 6:
@@ -165,7 +166,7 @@ namespace ChipCore
                     RND_Vx_byte(x, kk);
                     break;
                 case 0xD:
-                    DRW_Vx_Vy_nibble(x , y, leastSigNib);
+                    DRW_Vx_Vy_nibble(x, y, leastSigNib);
                     break;
                 case 0xE:
                     if (leastSigByte == 0x009E)
@@ -296,6 +297,7 @@ namespace ChipCore
         private void SHR_Vx_Vy(byte x, byte y)
         {
             _vRegisters[vfIndex] = (byte)(_vRegisters[x] & 1);
+            //_vRegisters[x] >>= 1;
             _vRegisters[x] = (byte)(_vRegisters[y] >> 1);
         }
 
@@ -313,10 +315,10 @@ namespace ChipCore
         //Set Vx = Vx SHL 1.
 
         //If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
-        private void  SHL_Vx(byte x, byte y)
+        private void SHL_Vx(byte x, byte y)
         {
-            _vRegisters[vfIndex] = (byte)((_vRegisters[x] & 0x8) >> 3);
-            _vRegisters[x] =  (byte)(_vRegisters[y] << 1);
+            _vRegisters[vfIndex] = (byte)((_vRegisters[x] >> 7) & 1);
+            _vRegisters[x] = (byte)(_vRegisters[y] << 1);
         }
 
         //Skip next instruction if Vx != Vy.
@@ -379,7 +381,7 @@ namespace ChipCore
             Sprite sprite = new Sprite(spriteData);
             var xStart = _vRegisters[x];
             var yStart = _vRegisters[y];
-            bool collision =_display.RenderSprite(xStart, yStart, sprite);
+            bool collision = _display.RenderSprite(xStart, yStart, sprite);
             if (collision)
                 _vRegisters[vfIndex] = 1;
             else
@@ -396,7 +398,7 @@ namespace ChipCore
 
         private void SKNP_Vx(byte x)
         {
-           
+
             bool keyPressed = _keypad.GetKeyBoardBuffer(_vRegisters[x]);
             if (!keyPressed)
                 _programCounter += 2;
@@ -414,7 +416,7 @@ namespace ChipCore
         */
         private void LD_Vx_K(byte x)
         {
-            _vRegisters[x] = _keypad.WaitForKey();
+            _vRegisters[x] = (byte)_keypad.WaitForKey();
         }
 
         private void LD_DT_Vx(byte x)
@@ -429,25 +431,25 @@ namespace ChipCore
 
         private void ADD_I_Vx(byte x)
         {
-            _iRegister += x;
+            _iRegister += _vRegisters[x];
         }
 
         private void LD_F_Vx(byte x)
         {
-           
+
             _iRegister = (ushort)(_vRegisters[x] * 5);
         }
 
         private void LD_B_Vx(byte x)
         {
             byte val = _vRegisters[x];
-            byte hundred = (byte)((val / 100) % 10);
+            byte hundred = (byte)((val / 100));
             byte ten = (byte)((val / 10) % 10);
-            byte one = (byte)(val  % 10);
+            byte one = (byte)(val % 10);
 
             _ram.StoreInMemory(_iRegister, hundred);
-            _ram.StoreInMemory((ushort)(_iRegister+1), ten);
-            _ram.StoreInMemory((ushort)(_iRegister+2), one);
+            _ram.StoreInMemory((ushort)(_iRegister + 1), ten);
+            _ram.StoreInMemory((ushort)(_iRegister + 2), one);
         }
 
         private void LD_I_Vx(byte x)

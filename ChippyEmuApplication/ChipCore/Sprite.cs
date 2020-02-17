@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ChipCore
+﻿namespace ChipCore
 {
     class Sprite
     {
-        byte[] _spriteData;
+        readonly byte[] _spriteData;
 
         public Sprite(byte[] spriteData)
         {

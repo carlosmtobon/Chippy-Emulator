@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Windows.Input;
-
-namespace ChipCore
+﻿namespace ChipCore
 {
     class KeyPad
     {
-        bool[] _kbBuffer = new bool[16];
+        readonly bool[] _kbBuffer = new bool[16];
 
         public const int key0 = 0x0;
         public const int key1 = 0x1;
@@ -41,10 +36,25 @@ namespace ChipCore
             return _kbBuffer[keyPos];
         }
 
-        public byte WaitForKey()
+        public int WaitForKey()
         {
-            return 0;
-            //Console.Read();
+            bool keyPressed = false;
+            int key = -1;
+            while (!keyPressed)
+            {
+                for (int i = 0; i < _kbBuffer.Length; i++)
+                {
+                    if (_kbBuffer[i] == true)
+                    {
+                        key = i;
+                        keyPressed = true;
+                        _kbBuffer[i] = false;
+                        break;
+                    }
+                }
+            }
+
+            return key;
         }
     }
 }

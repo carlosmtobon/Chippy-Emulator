@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ChipCore
 {
     class Display
     {
         public byte[][] _displayPixels;
-     
-        RAM _ram;
-        public int Height = 32;
-        public int Width = 64;
+        readonly RAM _ram;
+        public int Height = 64;
+        public int Width = 124;
         internal bool drawScreen;
 
         public Display(RAM ram)
@@ -21,10 +18,10 @@ namespace ChipCore
 
         private void InitDisplay()
         {
-            _displayPixels = new byte[32][];
+            _displayPixels = new byte[Height][];
             for (int i = 0; i < _displayPixels.Length; i++)
             {
-                _displayPixels[i] = new byte[64];
+                _displayPixels[i] = new byte[Width];
             }
         }
 
@@ -37,12 +34,12 @@ namespace ChipCore
                 byte b = spriteData[i];
                 for (int j = 0; j < 8; j++)
                 {
-                    var bitInBuff = _displayPixels[(y + i) % 64][(x + j) % 32]; 
+                    var bitInBuff = _displayPixels[(y + i) % Width][(x + j) % Height];
                     byte bit = (byte)((b >> (7 - j)) & 1);
-                    _displayPixels[(y + i) % 64][(x + j) % 32] ^= bit;
-                    var bitInBuffAfter = _displayPixels[(y + i) % 64][(x + j) % 32];
-                    if ((bitInBuff == 1) && bitInBuff != bitInBuffAfter) 
-                        collision = true; 
+                    _displayPixels[(y + i) % Width][(x + j) % Height] ^= bit;
+                    var bitInBuffAfter = _displayPixels[(y + i) % Width][(x + j) % Height];
+                    if ((bitInBuff == 1) && bitInBuff != bitInBuffAfter)
+                        collision = true;
                 }
             }
             return collision;
@@ -65,10 +62,13 @@ namespace ChipCore
             {
                 for (int j = 0; j < _displayPixels[0].Length; j++)
                 {
-                    Console.Write(_displayPixels[i][j] == 1 ? "*" : " ");
+                    Console.Write(_displayPixels[i][j] == 1 ? "*" : "_");
                 }
                 Console.WriteLine();
             }
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
             Console.WriteLine();
         }
     }
