@@ -202,7 +202,10 @@ namespace ChippyEmuApplication
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            gameThread.Abort();
+            if (gameThread != null && gameThread.IsAlive)
+            {
+                gameThread.Abort();
+            }
         }
     }
 }
