@@ -29,15 +29,20 @@ namespace ChipCore
         {
             bool collision = false;
             var spriteData = sprite.GetSpriteData();
-            for (int i = 0; i < spriteData.Length; i++)
+            for (int yIndex = 0; yIndex < spriteData.Length; yIndex++)
             {
-                byte b = spriteData[i];
-                for (int j = 0; j < 8; j++)
+                var yCoord = y + yIndex;
+                yCoord %= Height;
+                byte b = spriteData[yIndex];
+                for (int xIndex = 0; xIndex < 8; xIndex++)
                 {
-                    var bitInBuff = _displayPixels[(y + i) % Width][(x + j) % Height];
-                    byte bit = (byte)((b >> (7 - j)) & 1);
-                    _displayPixels[(y + i) % Width][(x + j) % Height] ^= bit;
-                    var bitInBuffAfter = _displayPixels[(y + i) % Width][(x + j) % Height];
+                    var xCoord = x + xIndex;
+                    xCoord %= Width;
+
+                    var bitInBuff = _displayPixels[yCoord][xCoord];
+                    byte bit = (byte)((b >> (7 - xIndex)) & 1);
+                    _displayPixels[yCoord][xCoord] ^= bit;
+                    var bitInBuffAfter = _displayPixels[yCoord][xCoord];
                     if ((bitInBuff == 1) && bitInBuff != bitInBuffAfter)
                         collision = true;
                 }

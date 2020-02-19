@@ -298,7 +298,7 @@ namespace ChipCore
         {
             _vRegisters[vfIndex] = (byte)(_vRegisters[x] & 1);
             //_vRegisters[x] >>= 1;
-            _vRegisters[x] = (byte)(_vRegisters[y] >> 1);
+            _vRegisters[x] = (byte)(_vRegisters[x] >> 1);
         }
 
         //Set Vx = Vy - Vx, set VF = NOT borrow.
@@ -318,7 +318,7 @@ namespace ChipCore
         private void SHL_Vx(byte x, byte y)
         {
             _vRegisters[vfIndex] = (byte)((_vRegisters[x] >> 7) & 1);
-            _vRegisters[x] = (byte)(_vRegisters[y] << 1);
+            _vRegisters[x] = (byte)(_vRegisters[x] << 1);
         }
 
         //Skip next instruction if Vx != Vy.
