@@ -26,7 +26,7 @@ namespace ChippyEmuApplication
         public void Init(String fileName)
         {
             _ram = new RAM(fileName);
-            _display = new Display(_ram);
+            _display = new Display(32, 64, 7);
             _kb = new KeyPad();
             _cpu = new CPU(_ram, _display, _kb);
             GameTick();
@@ -60,12 +60,12 @@ namespace ChippyEmuApplication
                 }
 
 
-                Thread.Sleep(1);
-                //var timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
-                //while (timeElapsed < 1852)
-                //{
-                //    timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
-                //}
+              //  Thread.Sleep(1);
+                var timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
+                while (timeElapsed < 1852)
+                {
+                    timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
+                }
 
                 if (total.ElapsedMilliseconds > 1000)
                 {
@@ -83,27 +83,26 @@ namespace ChippyEmuApplication
         {
             try
             {
-                var size = 8;
+                var scale = _display.Scale;
                 Bitmap image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
                 using (Graphics g = Graphics.FromImage(image))
                 {
-
                     Brush brsh = new SolidBrush(Color.ForestGreen);
 
                     byte[][] pixels = _display._displayPixels;
 
-                    for (int y = 0; y < _display.Height; y++)
+                    for (int x = 0; x < _display.Width; x++)
                     {
-                        for (int x = 0; x < _display.Width; x++)
+                        for (int y = 0; y < _display.Height; y++)
                         {
                             if (pixels[y][x] == 1)
                             {
-                                g.FillRectangle(brsh, (pictureBox1.Width / 64) * x, (pictureBox1.Height / 32) * y, size, size);
+                                g.FillRectangle(brsh, x * scale,  y * scale, scale, scale);
                             }
                         }
                     }
                     pictureBox1.Image = image;
-                    //_display.ConsoleDisplay();
+                    _display.ConsoleDisplay();
                 }
             }
             catch (Exception)

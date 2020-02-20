@@ -5,14 +5,18 @@ namespace ChipCore
     class Display
     {
         public byte[][] _displayPixels;
-        readonly RAM _ram;
-        public int Height = 64;
-        public int Width = 124;
+      
         internal bool drawScreen;
+        public int Height { get; set; }
+        public int Width { get; set; }
+        public int Scale { get; set; }
 
-        public Display(RAM ram)
+
+        public Display(int row, int col, int scale)
         {
-            _ram = ram;
+            Width = col;
+            Height = row;
+            Scale = scale;
             InitDisplay();
         }
 
