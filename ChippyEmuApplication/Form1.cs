@@ -10,7 +10,6 @@ namespace ChippyEmuApplication
 {
     public partial class Form1 : Form
     {
-        // private Interpreter  _intrepreter;
         RAM _ram;
         Display _display;
         CPU _cpu;
@@ -26,7 +25,7 @@ namespace ChippyEmuApplication
         public void Init(String fileName)
         {
             _ram = new RAM(fileName);
-            _display = new Display(32, 64, 7);
+            _display = new Display(64, 32, 7);
             _kb = new KeyPad();
             _cpu = new CPU(_ram, _display, _kb);
             GameTick();
@@ -59,8 +58,6 @@ namespace ChippyEmuApplication
                     _display.drawScreen = false;
                 }
 
-
-              //  Thread.Sleep(1);
                 var timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
                 while (timeElapsed < 1852)
                 {
@@ -102,7 +99,6 @@ namespace ChippyEmuApplication
                         }
                     }
                     pictureBox1.Image = image;
-                    _display.ConsoleDisplay();
                 }
             }
             catch (Exception)

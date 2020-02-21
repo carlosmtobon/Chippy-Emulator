@@ -38,7 +38,7 @@
             // pictureBox1
             // 
             this.pictureBox1.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.pictureBox1.Location = new System.Drawing.Point(37, 45);
+            this.pictureBox1.Location = new System.Drawing.Point(70, 61);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(1269, 619);
@@ -53,7 +53,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(1072, 756);
+            this.button2.Location = new System.Drawing.Point(1110, 736);
             this.button2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(229, 62);
@@ -65,7 +65,7 @@
             // fpsLabel
             // 
             this.fpsLabel.AutoSize = true;
-            this.fpsLabel.Location = new System.Drawing.Point(64, 772);
+            this.fpsLabel.Location = new System.Drawing.Point(64, 736);
             this.fpsLabel.Name = "fpsLabel";
             this.fpsLabel.Size = new System.Drawing.Size(85, 32);
             this.fpsLabel.TabIndex = 4;
@@ -76,7 +76,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(16F, 31F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.ClientSize = new System.Drawing.Size(1411, 898);
+            this.ClientSize = new System.Drawing.Size(1389, 842);
             this.Controls.Add(this.fpsLabel);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.pictureBox1);

@@ -12,7 +12,7 @@ namespace ChipCore
         public int Scale { get; set; }
 
 
-        public Display(int row, int col, int scale)
+        public Display(int col, int row, int scale)
         {
             Width = col;
             Height = row;
@@ -23,7 +23,7 @@ namespace ChipCore
         private void InitDisplay()
         {
             _displayPixels = new byte[Height][];
-            for (int i = 0; i < _displayPixels.Length; i++)
+            for (int i = 0; i < Height; i++)
             {
                 _displayPixels[i] = new byte[Width];
             }
@@ -33,7 +33,7 @@ namespace ChipCore
         {
             bool collision = false;
             var spriteData = sprite.GetSpriteData();
-            for (int yIndex = 0; yIndex < spriteData.Length; yIndex++)
+             for (int yIndex = 0; yIndex < spriteData.Length; yIndex++)
             {
                 var yCoord = y + yIndex;
                 yCoord %= Height;
