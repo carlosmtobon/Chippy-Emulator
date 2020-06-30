@@ -3,7 +3,7 @@ using System.IO;
 
 namespace ChipCore
 {
-    class RAM
+    public class RAM
     {
         const int _memSize = 4096;
         private readonly byte[] _memory = new byte[_memSize];
@@ -33,6 +33,11 @@ namespace ChipCore
         {
             StoreFontsInMemory();
             LoadProgram(fileName);
+        }
+
+        public byte[] GetMemory()
+        {
+            return _memory;
         }
 
         public void LoadProgram(string fileName)

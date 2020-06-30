@@ -11,9 +11,9 @@ namespace ChippyEmuApplication
     public partial class Form1 : Form
     {
         RAM _ram;
-        Display _display;
-        CPU _cpu;
-        KeyPad _kb;
+        private Display _display;
+        private CPU _cpu;
+        private KeyPad _kb;
 
         Thread gameThread;
 
@@ -28,7 +28,29 @@ namespace ChippyEmuApplication
             _display = new Display(64, 32, 7);
             _kb = new KeyPad();
             _cpu = new CPU(_ram, _display, _kb);
+
             GameTick();
+            //var sprite = new Sprite(_ram.LoadMemBlock(0, 5));
+            //_display.RenderSprite(0, 0, sprite);
+            //_display.ConsoleDisplay();
+            //_display.ClearScreen();
+
+            // sprite = new Sprite(_ram.LoadMemBlock(0, 5));
+            //_display.RenderSprite(0, 0, sprite);
+            //_display.ScrollRight();
+            //_display.ConsoleDisplay();
+            //_display.ClearScreen();
+
+            //sprite = new Sprite(_ram.LoadMemBlock(0, 5));
+            //_display.RenderSprite(0, 0, sprite);
+            //_display.ScrollLeft();
+            //_display.ConsoleDisplay();
+            //_display.ClearScreen();
+
+            //sprite = new Sprite(_ram.LoadMemBlock(0, 5));
+            //_display.RenderSprite(0, 0, sprite);
+            //_display.ScrollDown(15);
+            //_display.ConsoleDisplay();
         }
 
         private void GameTick()
@@ -46,30 +68,32 @@ namespace ChippyEmuApplication
                 _cpu.ExecuteCycle();
                 instruction++;
 
-                if (instruction == 9)
+                if (instruction == 12)
                 {
                     frames++;
                     _cpu.UpdateTimers();
+                    if (_cpu.playSound)
+                    {
+                        new Thread(() => Console.Beep(2000, 100)).Start();
+                        _cpu.playSound = false;
+                    }
                     instruction = 0;
                 }
-                if (_display.drawScreen)
+                if (_display.DrawScreen)
                 {
                     UpdateScreen(_display);
-                    _display.drawScreen = false;
+                    _display.DrawScreen = false;
                 }
+                //_display.ConsoleDisplay();
 
                 var timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
-                while (timeElapsed < 1852)
+                while (timeElapsed < 1388)
                 {
                     timeElapsed = stopwatch.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
                 }
 
                 if (total.ElapsedMilliseconds > 1000)
                 {
-                    Invoke((MethodInvoker)delegate
-                    {
-                        fpsLabel.Text = $"FPS: {frames}";
-                    });
                     frames = 0;
                     total.Restart();
                 }
@@ -201,6 +225,26 @@ namespace ChippyEmuApplication
             {
                 gameThread.Abort();
             }
+        }
+
+        private void loadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (gameThread != null && gameThread.IsAlive)
+            {
+                gameThread.Abort();
+            }
+            openFileDialog1.ShowDialog();
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        public void dissemblerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var disform = new DisassemblerForm(_ram);
+            disform.ShowDialog();
         }
     }
 }

@@ -28,6 +28,7 @@ namespace ChipCore
 
         // delay timer register
         byte _delayTimerRegister;
+        public bool playSound;
 
         public CPU(RAM ram, Display display, KeyPad keypad)
         {
@@ -77,7 +78,7 @@ namespace ChipCore
             if (_soundTimerRegister > 0)
             {
                 if (_soundTimerRegister == 1)
-                    new Thread(() => Console.Beep(3000, 100)).Start();
+                    playSound = true;
                 _soundTimerRegister--;
             }
 
@@ -103,6 +104,18 @@ namespace ChipCore
                         CLS();
                     else if (_opcode == 0x00EE)
                         RET();
+                    else if (_opcode == 0x00FB)
+                        ScrollRight();
+                    else if (_opcode == 0x00FC)
+                        ScrollLeft();
+                    else if (_opcode == 0x00FD)
+                        Quit();
+                    else if (_opcode == 0x00FE)
+                        SetChip8Graphics();
+                    else if (_opcode == 0x00FF)
+                        SetSchipGraphics();
+                    else if (y == 0x000C)
+                        ScrollDown(leastSigNib);
                     else
                         SYS(addr);
                     break;
@@ -189,11 +202,45 @@ namespace ChipCore
                         LD_I_Vx(x);
                     else if (leastSigByte == 0x0065)
                         LD_Vx_I(x);
+                    else if (leastSigByte == 0x0075)
+                        LD_Vx_I_Schip(x);
+                    else if (leastSigByte == 0x0085)
+                        LD_I_Vx_Schip(x);
                     break;
                 default:
                     Console.WriteLine("Unknown Opcode");
                     break;
             }
+        }
+
+        private void ScrollDown(byte leastSigNib)
+        {
+            _display.ScrollDown(leastSigNib);
+        }
+
+        private void SetSchipGraphics()
+        {
+            _display.ExtendedDisplay = true;
+        }
+
+        private void SetChip8Graphics()
+        {
+            _display.ExtendedDisplay = true;
+        }
+
+        private void Quit()
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void ScrollLeft()
+        {
+            _display.ScrollLeft();
+        }
+
+        private void ScrollRight()
+        {
+            _display.ScrollRight();
         }
 
         private void SYS(ushort addr)
@@ -372,7 +419,12 @@ namespace ChipCore
          */
         private void DRW_Vx_Vy_nibble(byte x, byte y, byte n)
         {
-            byte[] spriteData = _ram.LoadMemBlock(_iRegister, n);
+            byte[] spriteData; 
+            if (n == 0)
+                spriteData = _ram.LoadMemBlock(_iRegister, 32);
+            else
+                spriteData = _ram.LoadMemBlock(_iRegister, n);
+
             Sprite sprite = new Sprite(spriteData);
             var xStart = _vRegisters[x];
             var yStart = _vRegisters[y];
@@ -381,7 +433,7 @@ namespace ChipCore
                 _vRegisters[vfIndex] = 1;
             else
                 _vRegisters[vfIndex] = 0;
-            _display.drawScreen = true;
+            _display.DrawScreen = true;
         }
 
         private void SKP_Vx(byte x)
@@ -459,6 +511,22 @@ namespace ChipCore
             ushort currentAddr = _iRegister;
             for (int i = 0; i <= x; i++)
                 _vRegisters[i] = _ram.LoadFromMemory(currentAddr++);
+        }
+
+        private void LD_I_Vx_Schip(byte x)
+        {
+            Console.WriteLine("Store SCHIP");
+            ushort currentAddr = _iRegister;
+            for (int i = 0; i <= x; i++)
+                _ram.StoreInMemory((ushort)(0x130 + i), _vRegisters[i]);
+        }
+
+        private void LD_Vx_I_Schip(byte x)
+        {
+            Console.WriteLine("Load SCHIP");
+            ushort currentAddr = _iRegister;
+            for (int i = 0; i <= x; i++)
+                _ram.StoreInMemory((ushort)(0x130 + i), _vRegisters[i]);
         }
     }
 }
